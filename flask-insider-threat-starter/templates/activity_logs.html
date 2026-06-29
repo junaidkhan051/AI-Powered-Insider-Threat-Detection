@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <h2 class="text-light fw-bold mb-1">
+            <i class="fa-solid fa-satellite text-info me-2 animate-pulse"></i> 
+            {% if username == 'All Users' %}
+                Real-Time Activity Telemetry
+            {% else %}
+                Activity Telemetry: <span class="text-primary">{{ username }}</span>
+            {% endif %}
+        </h2>
+        <p class="text-muted small">Live stream of endpoint operations, file access, and auth events.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if username != 'All Users' %}
+            <a href="{{ url_for('users.profile', username=username) }}" class="btn btn-outline-secondary rounded-pill px-4 hover-glow">
+                <i class="fa-solid fa-arrow-left me-2"></i> Back to Profile
+            </a>
+        {% else %}
+            <div class="d-inline-flex align-items-center bg-dark bg-opacity-50 border border-success px-3 py-2 rounded shadow-sm">
+                <span class="spinner-grow spinner-grow-sm text-success me-2" role="status" aria-hidden="true"></span>
+                <span class="text-success fw-bold small tracking-wider">LIVE FEED ACTIVE</span>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if username == 'All Users' %}
+<!-- Filters Panel -->
+<div class="card p-3 mb-4 border border-secondary shadow-lg" style="background: rgba(13, 22, 38, 0.5) !important;">
+    <form method="GET" action="{{ url_for('users.all_activity_logs') }}" class="row g-3 align-items-center">
+        <div class="col-md-3">
+            <label class="form-label text-muted small mb-1 fw-semibold text-uppercase">Date Range</label>
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-regular fa-calendar"></i></span>
+                <input type="text" class="form-control border-secondary" placeholder="Last 24 Hours (Default)" disabled>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label text-muted small mb-1 fw-semibold text-uppercase">Entity</label>
+            <select name="user" class="form-select border-secondary bg-dark text-light">
+                <option value="">All Entities</option>
+                {% for u in users_list %}
+                    <option value="{{ u }}" {% if u == selected_user %}selected{% endif %}>{{ u }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label text-muted small mb-1 fw-semibold text-uppercase">Department</label>
+            <select name="dept" class="form-select border-secondary bg-dark text-light">
+                <option value="">All Depts</option>
+                {% for d in depts %}
+                    <option value="{{ d }}" {% if d == selected_dept %}selected{% endif %}>{{ d }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label text-muted small mb-1 fw-semibold text-uppercase">Activity Type</label>
+            <select name="type" class="form-select border-secondary bg-dark text-light">
+                <option value="">All Activities</option>
+                <option value="file" {% if selected_type == 'file' %}selected{% endif %}>File Access</option>
+                <option value="usb" {% if selected_type == 'usb' %}selected{% endif %}>USB Auth</option>
+                <option value="login" {% if selected_type == 'login' %}selected{% endif %}>Failed Logins</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end h-100 pb-1">
+            <button type="submit" class="btn btn-primary bg-purple-btn border-0 w-100 me-2"><i class="fa-solid fa-filter"></i> Apply</button>
+            <a href="{{ url_for('users.all_activity_logs') }}" class="btn btn-outline-secondary border-secondary text-muted" title="Reset Filters"><i class="fa-solid fa-rotate-right"></i></a>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+<!-- Live Activity Feed Table -->
+<div class="card h-100 border border-secondary shadow-lg" style="background: rgba(13, 22, 38, 0.6) !important;">
+    <div class="card-body p-0">
+        <div class="table-responsive" style="max-height: 800px; overflow-y: auto;">
+            <table class="table table-hover table-dark align-middle mb-0" style="background: transparent;">
+                <thead class="bg-dark bg-opacity-75" style="position: sticky; top: 0; z-index: 1;">
+                    <tr>
+                        <th class="ps-4">Timestamp</th>
+                        {% if username == 'All Users' %}
+                            <th>User</th>
+                        {% endif %}
+                        <th>Activity Type</th>
+                        <th>Severity</th>
+                        <th class="pe-4">Description</th>
+                    </tr>
+                </thead>
+                <tbody id="liveFeedBody">
+                    {% set display_logs = logs_data if username == 'All Users' else logs %}
+                    {% for item in display_logs %}
+                        {% set log = item[0] if username == 'All Users' else item %}
+                        {% set is_anomaly = (log.files_accessed > 50 or log.usb_used > 2 or log.failed_logins > 2) %}
+                        {% set is_high = (log.files_accessed > 100 or log.usb_used > 5 or log.failed_logins > 5) %}
+                        
+                        <tr class="border-bottom border-secondary {% if is_high %}bg-danger bg-opacity-10{% elif is_anomaly %}bg-warning bg-opacity-10{% endif %}">
+                            <td class="ps-4 text-muted small" style="font-family: monospace; white-space: nowrap;">
+                                {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+                            </td>
+                            
+                            {% if username == 'All Users' %}
+                                <td>
+                                    <a href="{{ url_for('users.profile', username=log.username) }}" class="text-primary fw-bold text-decoration-none hover-glow">
+                                        {{ log.username }}
+                                    </a>
+                                </td>
+                            {% endif %}
+                            
+                            <td>
+                                {% if log.failed_logins > 0 %}
+                                    <span class="text-light fw-medium"><i class="fa-solid fa-key text-secondary me-1"></i> Authentication</span>
+                                {% elif log.usb_used > 0 %}
+                                    <span class="text-light fw-medium"><i class="fa-brands fa-usb text-secondary me-1"></i> Hardware</span>
+                                {% else %}
+                                    <span class="text-light fw-medium"><i class="fa-regular fa-file-lines text-secondary me-1"></i> File System</span>
+                                {% endif %}
+                            </td>
+                            
+                            <td>
+                                {% if is_high %}
+                                    <span class="badge bg-danger text-white px-2 py-1"><i class="fa-solid fa-radiation animate-pulse"></i> CRITICAL</span>
+                                {% elif is_anomaly %}
+                                    <span class="badge bg-warning text-dark px-2 py-1"><i class="fa-solid fa-triangle-exclamation"></i> ELEVATED</span>
+                                {% else %}
+                                    <span class="badge bg-info bg-opacity-25 text-info border border-info px-2 py-1">ROUTINE</span>
+                                {% endif %}
+                            </td>
+                            
+                            <td class="text-muted small pe-4">
+                                <span class="d-block" style="max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    {% if log.failed_logins > 0 %}
+                                        Recorded <strong class="text-danger">{{ log.failed_logins }}</strong> failed login attempts. 
+                                    {% endif %}
+                                    {% if log.usb_used > 0 %}
+                                        Connected <strong class="text-warning">{{ log.usb_used }}</strong> external storage volumes. 
+                                    {% endif %}
+                                    {% if log.files_accessed > 0 %}
+                                        Accessed <strong class="text-info">{{ log.files_accessed }}</strong> files during session block.
+                                    {% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-5">
+                                <i class="fa-solid fa-tower-broadcast fa-3x text-info mb-3 opacity-50"></i>
+                                <p class="mb-0 fs-5">No activity telemetry matches the current filters.</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

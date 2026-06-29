@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreatGuard AI - Security Intelligence Platform</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark-theme">
+
+{% if current_user.is_authenticated %}
+<div id="wrapper">
+    <!-- Collapsible Premium Sidebar -->
+    <div id="sidebar-wrapper" class="glass-sidebar">
+        <div class="sidebar-brand-section d-flex align-items-center justify-content-between">
+            <div class="sidebar-heading text-light fs-5 fw-bold d-flex align-items-center brand-logo">
+                <i class="fa-solid fa-shield-halved text-purple-glow me-2 fs-3 animate-pulse"></i> 
+                <span class="brand-text">ThreatGuard<span class="text-purple-glow">.AI</span></span>
+            </div>
+            <button id="sidebarCollapseBtn" class="btn btn-link text-muted p-0 d-none d-md-block">
+                <i class="fa-solid fa-chevron-left toggle-icon"></i>
+            </button>
+        </div>
+        
+        <div class="list-group list-group-flush mt-3 flex-grow-1">
+            <a href="{{ url_for('dashboard.index') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'dashboard.index' %}active-link{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard">
+                <i class="fa-solid fa-gauge"></i> <span class="menu-text">Dashboard</span>
+            </a>
+            <a href="{{ url_for('users.index') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'users.index' or request.endpoint == 'users.activity_logs' and username != 'All Users' %}active-link{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Users">
+                <i class="fa-solid fa-users"></i> <span class="menu-text">Users</span>
+            </a>
+            <a href="{{ url_for('alerts.index') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'alerts.index' %}active-link{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Threat Center">
+                <i class="fa-solid fa-shield-virus"></i> <span class="menu-text">Threat Center</span>
+            </a>
+            <a href="{{ url_for('risk.index') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'risk.index' %}active-link{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Risk Analysis">
+                <i class="fa-solid fa-triangle-exclamation"></i> <span class="menu-text">Risk Analysis</span>
+            </a>
+            <a href="{{ url_for('users.all_activity_logs') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'users.all_activity_logs' %}active-link{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Activity Logs">
+                <i class="fa-solid fa-clock-rotate-left"></i> <span class="menu-text">Activity Logs</span>
+            </a>
+            <a href="{{ url_for('reports.index') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'reports.index' %}active-link{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Reports">
+                <i class="fa-solid fa-file-contract"></i> <span class="menu-text">Reports</span>
+            </a>
+            <a href="{{ url_for('dashboard.settings') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'dashboard.settings' %}active-link{% endif %}" data-bs-toggle="tooltip" data-bs-placement="right" title="Settings">
+                <i class="fa-solid fa-gear"></i> <span class="menu-text">Settings</span>
+            </a>
+        </div>
+
+        <div class="sidebar-footer-section">
+            <a href="{{ url_for('auth.logout') }}" class="list-group-item list-group-item-action text-danger-glow" data-bs-toggle="tooltip" data-bs-placement="right" title="Logout">
+                <i class="fa-solid fa-right-from-bracket"></i> <span class="menu-text">Logout</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="page-content-wrapper">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <button id="sidebarMobileCollapseBtn" class="btn btn-link text-light p-0 d-md-none me-3">
+                    <i class="fa-solid fa-bars fs-4"></i>
+                </button>
+                <div class="ms-auto d-flex align-items-center">
+                    <a href="{{ url_for('dashboard.notifications') }}" class="text-light me-4 position-relative hover-glow" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Notifications">
+                        <i class="fa-solid fa-bell fs-5 text-muted"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-dark rounded-circle animate-pulse">
+                            <span class="visually-hidden">New alerts</span>
+                        </span>
+                    </a>
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-light text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://ui-avatars.com/api/?name={{ current_user.username }}&background=bc13fe&color=fff&rounded=true" alt="mdo" width="32" height="32" class="rounded-circle me-2 border border-secondary">
+                            <span class="fw-medium">{{ current_user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow border-secondary" aria-labelledby="dropdownUser">
+                            <li><a class="dropdown-item" href="{{ url_for('dashboard.profile') }}"><i class="fa-solid fa-user-shield me-2 text-primary"></i> Administrator Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('dashboard.settings') }}"><i class="fa-solid fa-gear me-2 text-info"></i> Settings</a></li>
+                            <li><hr class="dropdown-divider border-secondary"></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-sign-out-alt me-2"></i> Sign out</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container-fluid p-4 fade-in">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show bg-{{ category }} bg-opacity-10 border-{{ category }} text-light" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Login Screen Layout -->
+<div class="container-fluid p-0 d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="position-absolute top-0 start-50 translate-middle-x mt-4" style="z-index: 1050; width: 100%; max-width: 400px;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow bg-{{ category }} bg-opacity-10 border-{{ category }} text-light" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    {% block login_content %}{% endblock %}
+</div>
+{% endif %}
+
+<!-- Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card border border-secondary text-light" style="background: rgba(5, 6, 10, 0.95); backdrop-filter: blur(20px);">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title fw-bold text-purple-glow" id="settingsModalLabel"><i class="fa-solid fa-sliders me-2"></i>System Settings</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <div class="mb-4">
+                    <h6 class="fw-semibold text-light mb-2"><i class="fa-solid fa-shield-halved text-purple-glow me-2"></i>Security Policy</h6>
+                    <p class="text-muted small">Configure the global detection thresholds for suspicious activities.</p>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="strictAiMode" checked>
+                        <label class="form-check-label text-muted small" for="strictAiMode">Strict IsolationForest Detection</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="autoBlockRisk">
+                        <label class="form-check-label text-muted small" for="autoBlockRisk">Auto-Isolate High Risk Users</label>
+                    </div>
+                </div>
+                <hr class="border-secondary">
+                <div>
+                    <h6 class="fw-semibold text-light mb-2"><i class="fa-solid fa-bell text-purple-glow me-2"></i>Notifications</h6>
+                    <p class="text-muted small">Select the channels for critical threat notifications.</p>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" value="" id="emailAlerts" checked>
+                        <label class="form-check-label text-muted small" for="emailAlerts">Send Admin Email Alerts</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="slackAlerts">
+                        <label class="form-check-label text-muted small" for="slackAlerts">Slack Webhook Alerts</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 bg-purple-btn border-0" data-bs-dismiss="modal" onclick="alert('Settings saved successfully.')">Save Settings</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const sidebar = document.getElementById("sidebar-wrapper");
+        const wrapper = document.getElementById("wrapper");
+        const toggleBtn = document.getElementById("sidebarCollapseBtn");
+        const mobileToggleBtn = document.getElementById("sidebarMobileCollapseBtn");
+        const toggleIcon = document.querySelector(".toggle-icon");
+        
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                trigger: 'hover'
+            });
+        });
+
+        function toggleSidebar(isCollapsed) {
+            if (isCollapsed) {
+                wrapper.classList.add("sidebar-collapsed");
+                if (toggleIcon) {
+                    toggleIcon.classList.remove("fa-chevron-left");
+                    toggleIcon.classList.add("fa-chevron-right");
+                }
+                // Enable tooltips
+                tooltipList.forEach(t => t.enable());
+            } else {
+                wrapper.classList.remove("sidebar-collapsed");
+                if (toggleIcon) {
+                    toggleIcon.classList.remove("fa-chevron-right");
+                    toggleIcon.classList.add("fa-chevron-left");
+                }
+                // Disable tooltips so they don't show when sidebar is expanded
+                tooltipList.forEach(t => t.disable());
+            }
+        }
+
+        // Load saved state
+        const savedState = localStorage.getItem("sidebar-collapsed") === "true";
+        if (savedState) {
+            toggleSidebar(true);
+        } else {
+            toggleSidebar(false);
+        }
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener("click", function() {
+                const willCollapse = !wrapper.classList.contains("sidebar-collapsed");
+                toggleSidebar(willCollapse);
+                localStorage.setItem("sidebar-collapsed", willCollapse);
+            });
+        }
+
+        if (mobileToggleBtn) {
+            mobileToggleBtn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                sidebar.classList.toggle("mobile-show");
+            });
+        }
+
+        document.addEventListener("click", function(e) {
+            if (sidebar && !sidebar.contains(e.target) && sidebar.classList.contains("mobile-show")) {
+                sidebar.classList.remove("mobile-show");
+            }
+        });
+    });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
+

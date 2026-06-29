@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+/* Flagship Command Center Styles */
+.command-center-bg {
+    background: radial-gradient(circle at center, #0a0a10 0%, #000000 100%);
+    min-height: calc(100vh - 100px);
+    margin: -1.5rem;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.grid-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: linear-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+    pointer-events: none;
+    transform: perspective(500px) rotateX(60deg) translateY(-100px) scale(3);
+    animation: gridMove 20s linear infinite;
+}
+@keyframes gridMove {
+    0% { transform: perspective(500px) rotateX(60deg) translateY(0) scale(3); }
+    100% { transform: perspective(500px) rotateX(60deg) translateY(50px) scale(3); }
+}
+
+/* Glassmorphism Widgets */
+.cyber-widget {
+    background: rgba(13, 22, 38, 0.4);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(139, 92, 246, 0.05);
+    z-index: 1;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+.cyber-widget:hover {
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.1), inset 0 0 30px rgba(139, 92, 246, 0.1);
+}
+.cyber-widget::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--purple), transparent);
+    opacity: 0.5;
+}
+
+/* Holographic AI Core */
+.ai-core-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    position: relative;
+    z-index: 2;
+}
+.ai-core {
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: coreRotate 15s linear infinite;
+}
+.ai-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--purple);
+    border-bottom-color: var(--info);
+    box-shadow: 0 0 20px var(--purple), inset 0 0 20px var(--purple);
+}
+.ai-ring:nth-child(1) { transform: rotateX(70deg) rotateY(0deg); animation: ringPulse 2s ease-in-out infinite alternate; }
+.ai-ring:nth-child(2) { transform: rotateX(70deg) rotateY(60deg); animation: ringPulse 2.5s ease-in-out infinite alternate; }
+.ai-ring:nth-child(3) { transform: rotateX(70deg) rotateY(120deg); animation: ringPulse 3s ease-in-out infinite alternate; }
+.ai-nucleus {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, #fff, var(--purple), transparent);
+    border-radius: 50%;
+    box-shadow: 0 0 50px var(--purple), 0 0 100px var(--info);
+    animation: nucleusPulse 2s ease-in-out infinite alternate;
+}
+@keyframes coreRotate {
+    0% { transform: rotateZ(0deg) rotateX(10deg); }
+    100% { transform: rotateZ(360deg) rotateX(10deg); }
+}
+@keyframes ringPulse {
+    0% { box-shadow: 0 0 10px var(--purple), inset 0 0 10px var(--purple); }
+    100% { box-shadow: 0 0 30px var(--info), inset 0 0 30px var(--info); }
+}
+@keyframes nucleusPulse {
+    0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+}
+
+/* Specific Widget Styles */
+.widget-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--info);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+.widget-title i { margin-right: 8px; font-size: 1rem; }
+
+.status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    background: var(--success);
+    box-shadow: 0 0 10px var(--success);
+    margin-right: 6px;
+    animation: blink 1.5s infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Neon text */
+.text-neon-purple {
+    color: #df80ff;
+    text-shadow: 0 0 10px rgba(188, 19, 254, 0.8);
+}
+.text-neon-info {
+    color: #80dfff;
+    text-shadow: 0 0 10px rgba(13, 202, 240, 0.8);
+}
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.data-row:last-child { border-bottom: none; }
+</style>
+
+<div class="command-center-bg">
+    <div class="grid-overlay"></div>
+    
+    <!-- Top Bar -->
+    <div class="d-flex justify-content-between align-items-center position-relative z-1 mb-4 pb-2 border-bottom" style="border-color: rgba(139, 92, 246, 0.3) !important;">
+        <h3 class="fw-bold mb-0 text-light"><i class="fa-brands fa-space-awesome text-purple-glow me-2"></i> ThreatGuard<span class="text-info">.AI</span> Command Center</h3>
+        <div class="d-flex align-items-center">
+            <div class="px-3 py-1 border border-success rounded-pill bg-success bg-opacity-10 text-success fw-bold small me-3">
+                <span class="status-dot"></span> SYSTEM DEFENSE ACTIVE
+            </div>
+            <div class="text-muted small" style="font-family: monospace;">UTC {{ range(10, 23) | random }}:{{ range(10, 59) | random }}:{{ range(10, 59) | random }}</div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="row g-4 position-relative z-1">
+        
+        <!-- Left Column -->
+        <div class="col-xl-3 d-flex flex-column gap-4">
+            
+            <!-- Threat Intelligence -->
+            <div class="card cyber-widget flex-grow-1 p-3">
+                <div class="widget-title text-danger"><i class="fa-solid fa-spider"></i> Threat Intelligence</div>
+                <div class="mb-4 text-center">
+                    <h1 class="display-4 fw-bold text-danger" style="text-shadow: 0 0 20px rgba(220, 53, 69, 0.5);">{{ threats_detected }}</h1>
+                    <p class="text-muted small text-uppercase">Anomalies Detected</p>
+                </div>
+                <div class="data-row">
+                    <span class="text-muted small">Global Signatures</span>
+                    <span class="text-info fw-bold small">SYNCED</span>
+                </div>
+                <div class="data-row">
+                    <span class="text-muted small">Zero-Day Prevention</span>
+                    <span class="text-success fw-bold small">ACTIVE</span>
+                </div>
+                <div class="data-row">
+                    <span class="text-muted small">Auto-Isolation</span>
+                    <span class="text-warning fw-bold small">STANDBY</span>
+                </div>
+            </div>
+
+            <!-- Behavior Analytics -->
+            <div class="card cyber-widget flex-grow-1 p-3">
+                <div class="widget-title text-info"><i class="fa-solid fa-chart-line"></i> Behavior Analytics</div>
+                <div style="height: 180px; width: 100%;">
+                    <canvas id="behaviorChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Center Column -->
+        <div class="col-xl-6 d-flex flex-column gap-4">
+            
+            <!-- Holographic AI Core -->
+            <div class="card cyber-widget p-4 text-center" style="background: rgba(10, 10, 15, 0.6); border-color: rgba(139, 92, 246, 0.4);">
+                <div class="widget-title justify-content-center text-purple-glow"><i class="fa-solid fa-microchip"></i> Sentinel Neural Core</div>
+                <div class="ai-core-container">
+                    <div class="ai-core">
+                        <div class="ai-ring"></div>
+                        <div class="ai-ring"></div>
+                        <div class="ai-ring"></div>
+                        <div class="ai-nucleus"></div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-4 border-end border-secondary">
+                        <div class="text-muted small text-uppercase mb-1">Processing Rate</div>
+                        <h5 class="text-neon-info mb-0" style="font-family: monospace;">24.8 TFLOPS</h5>
+                    </div>
+                    <div class="col-4 border-end border-secondary">
+                        <div class="text-muted small text-uppercase mb-1">Model Confidence</div>
+                        <h5 class="text-neon-purple mb-0" style="font-family: monospace;">99.9%</h5>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted small text-uppercase mb-1">Network Latency</div>
+                        <h5 class="text-success mb-0" style="font-family: monospace;">12ms</h5>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Score -->
+            <div class="card cyber-widget p-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="widget-title text-success mb-1"><i class="fa-solid fa-shield-halved"></i> Security Score</div>
+                        <h2 class="text-light fw-bold mb-0">Grade: <span class="text-success" style="text-shadow: 0 0 15px var(--success);">A+</span></h2>
+                    </div>
+                    <div class="text-end">
+                        <div class="text-muted small mb-1">Threat Mitigation Index</div>
+                        <div class="progress bg-dark border border-secondary" style="height: 10px; width: 200px;">
+                            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 95%; box-shadow: 0 0 10px var(--success);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-xl-3 d-flex flex-column gap-4">
+            
+            <!-- User Monitoring -->
+            <div class="card cyber-widget flex-grow-1 p-3">
+                <div class="widget-title text-warning"><i class="fa-solid fa-users-viewfinder"></i> User Monitoring</div>
+                <div class="mb-4 text-center">
+                    <h1 class="display-4 fw-bold text-light" style="text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);">{{ total_users }}</h1>
+                    <p class="text-muted small text-uppercase">Active Entities</p>
+                </div>
+                <div class="data-row">
+                    <span class="text-muted small">High Risk Entities</span>
+                    <span class="text-danger fw-bold small">{{ high_risk_users }}</span>
+                </div>
+                <div class="data-row">
+                    <span class="text-muted small">Sessions Monitored</span>
+                    <span class="text-info fw-bold small">1,402</span>
+                </div>
+                <div class="data-row">
+                    <span class="text-muted small">Privilege Escalations</span>
+                    <span class="text-warning fw-bold small">0</span>
+                </div>
+            </div>
+
+            <!-- Risk Heatmap / Live Alerts -->
+            <div class="card cyber-widget flex-grow-1 p-3">
+                <div class="widget-title text-purple-glow"><i class="fa-solid fa-satellite-dish"></i> Live Intercepts</div>
+                <div class="d-flex flex-column gap-2 overflow-hidden" style="max-height: 180px;">
+                    {% for alert in recent_alerts[:4] %}
+                    <div class="p-2 rounded bg-dark border border-secondary" style="border-left: 3px solid {% if alert.severity == 'High' %}var(--danger){% elif alert.severity == 'Medium' %}var(--warning){% else %}var(--info){% endif %} !important;">
+                        <div class="d-flex justify-content-between">
+                            <strong class="text-light small">{{ alert.username }}</strong>
+                            <span class="text-muted" style="font-size: 0.65rem; font-family: monospace;">{{ alert.timestamp.strftime('%H:%M:%S') }}</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ alert.threat_type }}</div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted small py-4">No intercepts active.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Inter, sans-serif';
+        
+        // Behavior Analytics Radar Chart (to act as Risk Heatmap / Behavior chart)
+        const ctx = document.getElementById('behaviorChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['File Access', 'Network I/O', 'Login Auth', 'Privilege', 'USB Comm', 'App Execution'],
+                    datasets: [{
+                        label: 'Fleet Baseline',
+                        data: [65, 59, 90, 81, 56, 55],
+                        fill: true,
+                        backgroundColor: 'rgba(13, 202, 240, 0.2)',
+                        borderColor: '#0dcaf0',
+                        pointBackgroundColor: '#0dcaf0',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#0dcaf0'
+                    }, {
+                        label: 'Current Anomaly',
+                        data: [28, 48, 40, 19, 96, 27],
+                        fill: true,
+                        backgroundColor: 'rgba(188, 19, 254, 0.2)',
+                        borderColor: '#bc13fe',
+                        pointBackgroundColor: '#bc13fe',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#bc13fe'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 10 } },
+                            ticks: { display: false, max: 100 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

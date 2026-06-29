@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block login_content %}
+<style>
+    body {
+        background-color: #05060A !important;
+        font-family: 'Inter', sans-serif;
+        position: relative;
+        overflow-x: hidden;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap');
+
+    /* Background Layer */
+    .login-bg {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        z-index: 0;
+        background-color: #05060A;
+        overflow: hidden;
+    }
+
+    .login-grid-bg {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-image: 
+            linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .login-glow-sphere {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 800px;
+        height: 800px;
+        background: radial-gradient(circle, rgba(179, 0, 255, 0.12) 0%, transparent 60%);
+        z-index: 1;
+        pointer-events: none;
+        animation: pulseLoginSphere 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseLoginSphere {
+        0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.8; }
+        100% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+    }
+
+    /* Canvas for particles */
+    #login-particles {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    /* Central AI Security Sphere Visual */
+    .security-core-visual {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 350px; height: 350px;
+        border-radius: 50%;
+        border: 1px dashed rgba(0, 255, 255, 0.2);
+        z-index: 2;
+        animation: rotateCore 20s linear infinite;
+        pointer-events: none;
+    }
+    
+    .security-core-visual::before {
+        content: '';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 250px; height: 250px;
+        border-radius: 50%;
+        border: 1px solid rgba(179, 0, 255, 0.3);
+        animation: rotateCoreReverse 15s linear infinite;
+    }
+
+    @keyframes rotateCore {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    @keyframes rotateCoreReverse {
+        0% { transform: translate(-50%, -50%) rotate(360deg); }
+        100% { transform: translate(-50%, -50%) rotate(0deg); }
+    }
+
+    /* Container */
+    .login-container {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        max-width: 440px;
+        padding: 2rem;
+        animation: loginEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    @keyframes loginEnter {
+        from { opacity: 0; transform: translateY(30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .login-card {
+        background: rgba(11, 12, 16, 0.5) !important;
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(0, 255, 255, 0.15) !important;
+        border-radius: 24px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(179, 0, 255, 0.1);
+        padding: 3.5rem 2.5rem !important;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 2px;
+        background: linear-gradient(90deg, transparent, #00ffff, #b300ff, transparent);
+    }
+
+    .brand-title {
+        font-family: 'Syncopate', sans-serif;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #fff;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .brand-accent {
+        background: linear-gradient(90deg, #b300ff, #00ffff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .login-subtitle {
+        text-align: center;
+        font-family: 'Inter', sans-serif;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 2.5rem;
+    }
+
+    /* Form Fields styling */
+    .custom-input {
+        background-color: rgba(5, 6, 10, 0.6) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+        border-radius: 12px !important;
+        padding: 1rem 1.2rem !important;
+        transition: all 0.3s ease;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.95rem;
+    }
+
+    .custom-input:focus {
+        border-color: #00ffff !important;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.2) !important;
+        background-color: rgba(5, 6, 10, 0.9) !important;
+        outline: none;
+    }
+
+    .custom-input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .input-label {
+        color: rgba(255, 255, 255, 0.5) !important;
+        padding-left: 1.2rem !important;
+        font-size: 0.9rem;
+    }
+
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        transform: scale(0.85) translateY(-0.75rem) translateX(0.15rem) !important;
+        color: #00ffff !important;
+    }
+
+    .custom-btn {
+        background: linear-gradient(90deg, #b300ff, #00ffff) !important;
+        border: none !important;
+        color: #05060A !important;
+        font-family: 'Syncopate', sans-serif;
+        font-weight: 800 !important;
+        font-size: 0.95rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        border-radius: 12px !important;
+        padding: 1.2rem !important;
+        box-shadow: 0 10px 20px rgba(179, 0, 255, 0.3) !important;
+        transition: all 0.3s ease !important;
+        width: 100%;
+        margin-top: 1rem;
+        cursor: pointer;
+    }
+
+    .custom-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(0, 255, 255, 0.5) !important;
+    }
+
+    .form-check-input {
+        background-color: rgba(5, 6, 10, 0.6);
+        border-color: rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+    }
+    .form-check-input:checked {
+        background-color: #00ffff;
+        border-color: #00ffff;
+    }
+
+    .form-check-label {
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+
+    .forgot-link {
+        color: #00ffff;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+    .forgot-link:hover {
+        color: #fff;
+        text-shadow: 0 0 10px #00ffff;
+    }
+
+    .logo-svg {
+        display: block;
+        margin: 0 auto 1.5rem auto;
+        width: 50px;
+        height: 50px;
+        filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.6));
+    }
+</style>
+
+<div class="login-bg">
+    <div class="login-grid-bg"></div>
+    <div class="login-glow-sphere"></div>
+    <div class="security-core-visual"></div>
+    <canvas id="login-particles"></canvas>
+</div>
+
+<div class="login-container">
+    <div class="login-card">
+        <svg class="logo-svg" viewBox="0 0 100 100" fill="none" stroke="white" stroke-width="6">
+            <circle cx="50" cy="50" r="40" stroke="#00ffff" />
+            <path d="M 30,30 L 70,70 M 70,30 L 30,70" stroke="#b300ff" />
+        </svg>
+        
+        <h2 class="brand-title">xizt<span class="brand-accent">.AI</span></h2>
+        <p class="login-subtitle">Command Center Login</p>
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="form-floating mb-4">
+                <input type="text" class="form-control custom-input" id="username" name="username" placeholder="Admin Email" required autocomplete="off">
+                <label for="username" class="input-label">Admin Email</label>
+            </div>
+            <div class="form-floating mb-4">
+                <input type="password" class="form-control custom-input" id="password" name="password" placeholder="Password" required>
+                <label for="password" class="input-label">Password</label>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="rememberMe">
+                    <label class="form-check-label" for="rememberMe">
+                        Remember Me
+                    </label>
+                </div>
+                <a href="{{ url_for('auth.forgot_password') }}" class="forgot-link">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="custom-btn">
+                Secure Login
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Particle system for login page
+    const canvas = document.getElementById('login-particles');
+    const ctx = canvas.getContext('2d');
+    
+    let width, height;
+    let particles = [];
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.size = Math.random() * 2 + 0.5;
+            this.speedX = (Math.random() - 0.5) * 0.5;
+            this.speedY = (Math.random() - 0.5) * 0.5;
+            this.alpha = Math.random() * 0.5 + 0.1;
+            this.color = Math.random() > 0.5 ? '#00ffff' : '#b300ff';
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+
+            if (this.x < 0) this.x = width;
+            if (this.x > width) this.x = 0;
+            if (this.y < 0) this.y = height;
+            if (this.y > height) this.y = 0;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = this.alpha;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = this.color;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = 0;
+        }
+    }
+
+    for (let i = 0; i < 50; i++) {
+        particles.push(new Particle());
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        setTimeout(animate, 1000 / 120);
+    }
+
+    animate();
+</script>
+{% endblock %}

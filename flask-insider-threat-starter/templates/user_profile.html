@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="text-light mb-1 fw-bold"><i class="fa-solid fa-id-card text-purple-glow me-2 animate-pulse"></i> Cyber Intelligence Profile</h2>
+            <p class="text-muted small">Deep analytical security profile and behavioral risk telemetry for <span class="text-light fw-bold">{{ user.username }}</span>.</p>
+        </div>
+        <a href="{{ url_for('users.index') }}" class="btn btn-outline-primary border-secondary rounded-pill px-4 hover-glow text-muted">
+            <i class="fa-solid fa-arrow-left me-2"></i> Back to Monitoring
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- User Information Card -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card h-100 border border-secondary" style="background: rgba(13, 22, 38, 0.4) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3 d-flex align-items-center justify-content-between">
+                <span><i class="fa-solid fa-circle-info text-purple-glow me-2"></i> Entity Information</span>
+                <span class="badge {% if user.status == 'Isolated' %}bg-danger{% elif user.status == 'Suspended' %}bg-secondary{% else %}bg-success{% endif %} bg-opacity-20 border border-current">
+                    {{ user.status }}
+                </span>
+            </div>
+            <div class="card-body py-4">
+                <div class="d-flex align-items-center mb-4">
+                    <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=bc13fe&color=fff&rounded=true" alt="avatar" width="64" height="64" class="me-4 shadow border border-purple-glow">
+                    <div>
+                        <h4 class="text-light fw-bold mb-1">{{ user.username }}</h4>
+                        <span class="text-muted small">Access Level: </span>
+                        <span class="badge bg-purple-glow text-purple-glow border border-purple-glow px-2 py-1 rounded small">{{ user.role }}</span>
+                    </div>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Department</div>
+                        <div class="text-light fw-medium mt-1">{{ user.department }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Email Address</div>
+                        <div class="text-light fw-medium mt-1">{{ user.email }}</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Monitoring Status</div>
+                        <div class="text-success fw-medium mt-1"><i class="fa-solid fa-circle-check me-1"></i> Active Telemetry</div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Endpoint Identity</div>
+                        <div class="text-light fw-medium mt-1 text-uppercase" style="font-family: monospace;">{{ user.username }}-WS-01</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Centerpiece: Risk Score Visualization -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card h-100 border border-secondary" style="background: rgba(13, 22, 38, 0.4) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-shield-halved text-purple-glow me-2"></i> Cyber Risk Analysis Gauge
+            </div>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-4">
+                <div class="row w-100 align-items-center">
+                    <div class="col-sm-6 text-center mb-3 mb-sm-0">
+                        <h1 class="display-3 fw-bold mb-0 {% if risk.score > 70 %}text-danger{% elif risk.score > 30 %}text-warning{% else %}text-success{% endif %}" style="text-shadow: 0 0 20px rgba(188, 19, 254, 0.2);">
+                            {{ "%.0f"|format(risk.score) if risk else 0 }}
+                        </h1>
+                        <div class="text-muted small text-uppercase fw-semibold tracking-wider mt-1">Aggregate Risk Score</div>
+                        <div class="mt-3">
+                            {% if risk.risk_level == 'High' %}
+                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger px-3 py-2 rounded-pill"><i class="fa-solid fa-biohazard me-1 animate-pulse"></i> HIGH THREAT LEVEL</span>
+                            {% elif risk.risk_level == 'Medium' %}
+                                <span class="badge bg-warning bg-opacity-25 text-warning border border-warning px-3 py-2 rounded-pill"><i class="fa-solid fa-triangle-exclamation me-1"></i> MODERATE RISK</span>
+                            {% else %}
+                                <span class="badge bg-success bg-opacity-25 text-success border border-success px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> SECURE / LOW RISK</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-sm-6 d-flex justify-content-center">
+                        <!-- Radar chart showing risk breakdown -->
+                        <div style="width: 180px; height: 180px;">
+                            <canvas id="riskRadarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Behavior Summary Card -->
+    <div class="col-12">
+        <div class="card border border-secondary" style="background: rgba(13, 22, 38, 0.4) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-chart-simple text-purple-glow me-2"></i> Behavioral Metrics & Analytics
+            </div>
+            <div class="card-body py-4">
+                <div class="row g-4">
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded bg-dark bg-opacity-40 border border-secondary h-100 text-center">
+                            <div class="text-muted small text-uppercase fw-semibold mb-1">Total File Interactions</div>
+                            <h2 class="text-light fw-bold mb-0 mt-2">{{ stats.total_files }}</h2>
+                            <div class="text-muted small mt-1">Accessed across logs</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded bg-dark bg-opacity-40 border border-secondary h-100 text-center">
+                            <div class="text-muted small text-uppercase fw-semibold mb-1">Avg Files Per Session</div>
+                            <h2 class="text-light fw-bold mb-0 mt-2">{{ stats.avg_files }}</h2>
+                            <div class="text-muted small mt-1">Files per activity check</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded bg-dark bg-opacity-40 border border-secondary h-100 text-center">
+                            <div class="text-muted small text-uppercase fw-semibold mb-1">USB Connections</div>
+                            <h2 class="text-warning fw-bold mb-0 mt-2">{{ stats.total_usb }}</h2>
+                            <div class="text-muted small mt-1">External media connections</div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-sm-6">
+                        <div class="p-3 rounded bg-dark bg-opacity-40 border border-secondary h-100 text-center">
+                            <div class="text-muted small text-uppercase fw-semibold mb-1">Failed Logins</div>
+                            <h2 class="text-danger fw-bold mb-0 mt-2">{{ stats.total_failed_logins }}</h2>
+                            <div class="text-muted small mt-1">Unsuccessful authentication</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Threat History Column -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card h-100 border border-secondary" style="background: rgba(13, 22, 38, 0.4) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i> Threat Alert History ({{ stats.threats_count }})
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Threat Vector</th>
+                                <th>Severity</th>
+                                <th class="text-end pe-4">Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for threat in threat_history %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-semibold text-light">{{ threat.threat_type }}</div>
+                                    <div class="text-muted small" style="font-size: 0.72rem;">{{ threat.description }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge {% if threat.severity == 'High' %}bg-danger{% elif threat.severity == 'Medium' %}bg-warning{% else %}bg-info{% endif %} bg-opacity-15 border border-current">
+                                        {{ threat.severity }}
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4 text-muted small">
+                                    {{ threat.timestamp.strftime('%b %d, %H:%M') }}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-5">
+                                    <i class="fa-solid fa-shield text-success mb-2 fs-3 d-block"></i>
+                                    No threat indicators or alerts recorded for this user.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Timeline -->
+    <div class="col-xl-6 col-lg-6">
+        <div class="card h-100 border border-secondary" style="background: rgba(13, 22, 38, 0.4) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-clock-rotate-left text-purple-glow me-2"></i> Activity Timeline (Last 10 Actions)
+            </div>
+            <div class="card-body p-4">
+                <ul class="timeline">
+                    {% for activity in recent_activities %}
+                    <li class="timeline-item">
+                        <div class="timeline-icon d-flex align-items-center justify-content-center" 
+                             style="border-color: {% if activity.files_accessed > 50 or activity.usb_used > 2 or activity.failed_logins > 2 %}var(--danger){% else %}var(--success){% endif %};">
+                        </div>
+                        <div class="text-light fw-medium mb-1">
+                            Accessed {{ activity.files_accessed }} files, {{ activity.usb_used }} USB, {{ activity.failed_logins }} Failed Logins
+                        </div>
+                        <div class="text-muted small">
+                            {{ activity.timestamp.strftime('%B %d, %Y at %H:%M:%S') }} • 
+                            {% if activity.files_accessed > 50 or activity.usb_used > 2 or activity.failed_logins > 2 %}
+                                <span class="text-danger-glow fw-bold">Anomaly Injected</span>
+                            {% else %}
+                                <span class="text-success small">Normal Operation</span>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="timeline-item text-muted py-4">No recent activity logs recorded.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('riskRadarChart').getContext('2d');
+        
+        // Dynamic vector risk weights based on user statistics
+        const maxFiles = {{ stats.avg_files }};
+        const maxUsb = {{ stats.total_usb }};
+        const maxFailed = {{ stats.total_failed_logins }};
+        
+        // Normalize vector scores between 0 and 100 for visual consistency
+        const fileRiskVal = Math.min(100, maxFiles * 2.5);
+        const usbRiskVal = Math.min(100, maxUsb * 20);
+        const authRiskVal = Math.min(100, maxFailed * 25);
+        const alertsRiskVal = Math.min(100, {{ stats.threats_count }} * 30);
+        
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['File Access', 'USB Vector', 'Failed Auth', 'Alerts Triggered'],
+                datasets: [{
+                    label: 'Risk Vectors',
+                    data: [fileRiskVal, usbRiskVal, authRiskVal, alertsRiskVal],
+                    backgroundColor: 'rgba(188, 19, 254, 0.2)',
+                    borderColor: '#bc13fe',
+                    pointBackgroundColor: '#ff007f',
+                    pointBorderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: {
+                            color: 'rgba(255, 255, 255, 0.08)'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.08)'
+                        },
+                        pointLabels: {
+                            color: '#94a3b8',
+                            font: {
+                                size: 9,
+                                family: 'Inter'
+                            }
+                        },
+                        ticks: {
+                            display: false,
+                            stepSize: 25
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

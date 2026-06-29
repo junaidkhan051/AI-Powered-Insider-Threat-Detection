@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <h2 class="text-light fw-bold mb-1"><i class="fa-solid fa-brain text-info me-2 animate-pulse"></i> Risk Intelligence</h2>
+        <p class="text-muted small">Enterprise AI analytics and probabilistic threat forecasting platform.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button class="btn btn-outline-info rounded-pill px-4 hover-glow d-flex align-items-center justify-content-end ms-auto gap-2">
+            <i class="fa-solid fa-arrows-rotate"></i> Synchronize Models
+        </button>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Risk Health Score / Risk Distribution -->
+    <div class="col-xl-3 col-lg-4">
+        <div class="card h-100 border border-info shadow-lg" style="background: rgba(13, 202, 240, 0.05) !important;">
+            <div class="card-header border-bottom border-info text-light fw-bold py-3">
+                <i class="fa-solid fa-heart-pulse text-info me-2"></i> Global Risk Health
+            </div>
+            <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                <div class="position-relative d-inline-block mx-auto mb-3 mt-2">
+                    <svg width="160" height="160">
+                        <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(56, 189, 248, 0.1)" stroke-width="14"></circle>
+                        <circle cx="80" cy="80" r="70" fill="none" stroke="var(--info)" stroke-width="14" stroke-dasharray="440" stroke-dashoffset="{{ 440 - (440 * (avg_score/100)) }}" transform="rotate(-90 80 80)" style="transition: stroke-dashoffset 1.5s ease-in-out; filter: drop-shadow(0 0 8px rgba(13, 202, 240, 0.6));"></circle>
+                    </svg>
+                    <div class="position-absolute top-50 start-50 translate-middle">
+                        <h2 class="mb-0 fw-bold text-light" style="text-shadow: 0 0 15px rgba(13, 202, 240, 0.5);">{{ "%.1f"|format(avg_score) }}</h2>
+                        <span class="text-muted small text-uppercase">Index</span>
+                    </div>
+                </div>
+                <div class="mt-2 w-100 px-3">
+                    <div class="d-flex justify-content-between text-muted small mb-1">
+                        <span>Low</span>
+                        <span class="text-info fw-bold">{{ risk_data[0] }} Entities</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small mb-1">
+                        <span>Medium</span>
+                        <span class="text-warning fw-bold">{{ risk_data[1] }} Entities</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>High</span>
+                        <span class="text-danger fw-bold">{{ risk_data[2] }} Entities</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Threat Trends -->
+    <div class="col-xl-9 col-lg-8">
+        <div class="card h-100 border border-secondary shadow-lg" style="background: rgba(13, 22, 38, 0.6) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-chart-line text-purple-glow me-2"></i> 7-Day Threat Velocity
+            </div>
+            <div class="card-body py-4">
+                <div style="height: 280px; width: 100%;">
+                    <canvas id="threatTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Department Risk Levels -->
+    <div class="col-xl-7 col-lg-6">
+        <div class="card h-100 border border-secondary shadow-lg" style="background: rgba(13, 22, 38, 0.6) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-sitemap text-warning me-2"></i> Department Risk Distribution
+            </div>
+            <div class="card-body py-4">
+                <div style="height: 300px; width: 100%;">
+                    <canvas id="deptRiskChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Risk Users -->
+    <div class="col-xl-5 col-lg-6">
+        <div class="card h-100 border border-secondary shadow-lg" style="background: rgba(13, 22, 38, 0.6) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3 d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-users-viewfinder text-danger me-2"></i> Top Risk Entities</span>
+                <a href="{{ url_for('users.index') }}" class="btn btn-sm btn-outline-secondary border-secondary text-muted rounded-pill px-3">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush bg-transparent">
+                    {% for user, risk in top_risk_users %}
+                    <li class="list-group-item bg-transparent border-bottom border-secondary px-4 py-3 hover-glow" style="transition: all 0.2s ease;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=bc13fe&color=fff&rounded=true" alt="avatar" width="40" height="40" class="me-3 shadow border border-purple-glow rounded-circle">
+                                <div>
+                                    <h6 class="text-light fw-bold mb-0">
+                                        <a href="{{ url_for('users.profile', username=user.username) }}" class="text-light text-decoration-none hover-glow">{{ user.username }}</a>
+                                    </h6>
+                                    <span class="text-muted" style="font-size: 0.75rem;">{{ user.department }}</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fs-5 fw-bold {% if risk.score > 70 %}text-danger{% elif risk.score > 30 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ "%.1f"|format(risk.score) }}
+                                </div>
+                                <div class="text-muted" style="font-size: 0.7rem;">RISK SCORE</div>
+                            </div>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item bg-transparent border-0 text-center text-muted py-5">
+                        <i class="fa-solid fa-shield-halved fa-3x text-success mb-3 opacity-50"></i>
+                        <p class="mb-0 fs-5">No risk entities detected.</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Inter, sans-serif';
+        
+        const colors = { primary: '#0ea5e9', success: '#198754', warning: '#ffc107', danger: '#dc3545', info: '#0dcaf0', purple: '#bc13fe' };
+        
+        // --- Threat Trends Line Chart ---
+        const trendCtx = document.getElementById('threatTrendChart');
+        if (trendCtx) {
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ trend_labels | tojson }},
+                    datasets: [{
+                        label: 'Detected Threats',
+                        data: {{ trend_counts | tojson }},
+                        borderColor: colors.purple,
+                        backgroundColor: 'rgba(188, 19, 254, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: colors.purple,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(13, 22, 38, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: colors.purple,
+                            borderColor: colors.purple,
+                            borderWidth: 1,
+                            padding: 10
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.05)', borderDash: [5, 5] },
+                            ticks: { precision: 0 }
+                        },
+                        x: { 
+                            grid: { display: false } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Department Risk Levels Bar Chart ---
+        const deptCtx = document.getElementById('deptRiskChart');
+        if (deptCtx) {
+            new Chart(deptCtx, {
+                type: 'bar',
+                data: {
+                    labels: {{ dept_labels | tojson }},
+                    datasets: [
+                        {
+                            label: 'Avg Risk Score',
+                            data: {{ dept_avg_scores | tojson }},
+                            backgroundColor: 'rgba(13, 202, 240, 0.6)',
+                            borderColor: colors.info,
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'High Risk Users',
+                            data: {{ dept_high_risks | tojson }},
+                            backgroundColor: 'rgba(220, 53, 69, 0.6)',
+                            borderColor: colors.danger,
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: { 
+                        legend: { 
+                            position: 'top',
+                            labels: { usePointStyle: true, padding: 20 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(13, 22, 38, 0.9)',
+                            titleColor: '#fff',
+                            borderColor: colors.info,
+                            borderWidth: 1,
+                            padding: 10
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: { color: 'rgba(255,255,255,0.05)', borderDash: [5, 5] },
+                            title: { display: true, text: 'Avg Risk Score' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'High Risk Count' },
+                            ticks: { precision: 0 }
+                        },
+                        x: { 
+                            grid: { display: false } 
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

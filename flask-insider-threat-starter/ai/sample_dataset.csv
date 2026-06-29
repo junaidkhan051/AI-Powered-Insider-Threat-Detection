@@ -1,0 +1,11 @@
+files_accessed,usb_used,failed_logins,label
+5,0,0,normal
+10,1,0,normal
+2,0,1,normal
+150,5,3,anomaly
+100,3,0,anomaly
+1,0,5,anomaly
+4,0,0,normal
+12,0,0,normal
+8,1,0,normal
+200,10,5,anomaly

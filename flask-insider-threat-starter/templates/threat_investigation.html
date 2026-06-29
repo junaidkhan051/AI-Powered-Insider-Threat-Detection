@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-dark bg-opacity-50 px-3 py-2 rounded border border-secondary d-inline-flex mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('alerts.index') }}" class="text-primary text-decoration-none hover-glow">Threat Center</a></li>
+                <li class="breadcrumb-item active text-muted" aria-current="page">Case #{{ alert.id }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <h2 class="text-light fw-bold mb-1">
+            <i class="fa-solid fa-microscope text-primary me-2"></i> Threat Investigation Case #{{ alert.id }}
+        </h2>
+        <p class="text-muted small">Deep packet analysis and behavioral review center for isolated threat events.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button class="btn btn-outline-danger border-danger hover-glow me-2 rounded-pill px-4" data-bs-toggle="tooltip" title="Instantly isolate endpoint from the network">
+            <i class="fa-solid fa-ban me-2"></i> Isolate Endpoint
+        </button>
+        <button class="btn btn-primary bg-purple-btn border-0 rounded-pill px-4">
+            <i class="fa-solid fa-file-export me-2"></i> Export Case
+        </button>
+    </div>
+</div>
+
+<!-- Threat Summary & Severity Indicator -->
+<div class="card border border-secondary mb-4 shadow-lg" style="background: rgba(13, 22, 38, 0.7) !important;">
+    <div class="card-body p-0">
+        <div class="row g-0">
+            <div class="col-lg-3 border-end border-secondary d-flex flex-column justify-content-center align-items-center p-4 
+                {% if alert.severity == 'Critical' %}bg-danger{% elif alert.severity == 'High' %}bg-danger{% elif alert.severity == 'Medium' %}bg-warning{% else %}bg-info{% endif %} bg-opacity-10">
+                
+                {% if alert.severity == 'Critical' %}
+                    <i class="fa-solid fa-radiation fa-3x text-danger mb-3 animate-pulse"></i>
+                    <h3 class="text-danger fw-bold tracking-wider mb-0">CRITICAL</h3>
+                {% elif alert.severity == 'High' %}
+                    <i class="fa-solid fa-skull-crossbones fa-3x text-danger mb-3 animate-pulse"></i>
+                    <h3 class="text-danger fw-bold tracking-wider mb-0">HIGH</h3>
+                {% elif alert.severity == 'Medium' %}
+                    <i class="fa-solid fa-triangle-exclamation fa-3x text-warning mb-3"></i>
+                    <h3 class="text-warning fw-bold tracking-wider mb-0">MEDIUM</h3>
+                {% else %}
+                    <i class="fa-solid fa-shield-check fa-3x text-info mb-3"></i>
+                    <h3 class="text-info fw-bold tracking-wider mb-0">LOW</h3>
+                {% endif %}
+                <div class="text-muted small text-uppercase mt-1">Severity Indicator</div>
+            </div>
+            <div class="col-lg-9 p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold mb-1">Threat Category</div>
+                        <h4 class="text-light fw-bold mb-0">{{ alert.threat_type }}</h4>
+                    </div>
+                    <div class="text-end">
+                        <div class="text-muted small text-uppercase fw-semibold mb-1">Detection Timestamp</div>
+                        <div class="text-light fw-medium font-monospace">{{ alert.timestamp.strftime('%B %d, %Y - %H:%M:%S UTC') }}</div>
+                    </div>
+                </div>
+                <div class="text-muted small text-uppercase fw-semibold mb-1">Event Description</div>
+                <p class="text-light mb-0 bg-dark bg-opacity-50 p-3 rounded border border-secondary" style="font-family: monospace;">{{ alert.description }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Affected User -->
+    <div class="col-xl-4 col-md-6">
+        <div class="card h-100 border border-secondary shadow-lg" style="background: rgba(13, 22, 38, 0.5) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-user-target text-purple-glow me-2"></i> Affected Entity
+            </div>
+            <div class="card-body">
+                {% if user %}
+                <div class="d-flex align-items-center mb-4">
+                    <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=bc13fe&color=fff&rounded=true" alt="avatar" width="56" height="56" class="me-3 shadow border border-purple-glow">
+                    <div>
+                        <h5 class="text-light fw-bold mb-1">{{ user.username }}</h5>
+                        <div class="text-muted small">{{ user.email }}</div>
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush bg-transparent">
+                    <li class="list-group-item bg-transparent border-secondary px-0 text-light d-flex justify-content-between">
+                        <span class="text-muted small">Department:</span> <span class="fw-medium">{{ user.department }}</span>
+                    </li>
+                    <li class="list-group-item bg-transparent border-secondary px-0 text-light d-flex justify-content-between">
+                        <span class="text-muted small">Access Role:</span> <span class="fw-medium">{{ user.role }}</span>
+                    </li>
+                    <li class="list-group-item bg-transparent border-0 px-0 text-light d-flex justify-content-between">
+                        <span class="text-muted small">Current Status:</span> 
+                        <span class="badge {% if user.status == 'Isolated' %}bg-danger{% elif user.status == 'Suspended' %}bg-secondary{% else %}bg-success{% endif %} bg-opacity-20 border border-current">
+                            {{ user.status }}
+                        </span>
+                    </li>
+                </ul>
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('users.profile', username=user.username) }}" class="btn btn-sm btn-outline-primary border-secondary w-100 rounded-pill hover-glow">View Intelligence Profile</a>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">Entity data unavailable.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Level -->
+    <div class="col-xl-4 col-md-6">
+        <div class="card h-100 border border-secondary shadow-lg" style="background: rgba(13, 22, 38, 0.5) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-gauge-high text-danger me-2"></i> Entity Risk Level
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                {% if risk %}
+                <h1 class="display-3 fw-bold mb-0 {% if risk.score > 70 %}text-danger{% elif risk.score > 30 %}text-warning{% else %}text-success{% endif %}" style="text-shadow: 0 0 20px rgba(188, 19, 254, 0.2);">
+                    {{ "%.0f"|format(risk.score) }}
+                </h1>
+                <div class="text-muted small text-uppercase fw-semibold tracking-wider mt-1 mb-3">Aggregate Risk Score</div>
+                
+                <div class="w-100 px-4">
+                    <div class="progress bg-dark border border-secondary" style="height: 10px; border-radius: 10px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated {% if risk.score > 70 %}bg-danger{% elif risk.score > 30 %}bg-warning{% else %}bg-success{% endif %}" 
+                             role="progressbar" style="width: {{ risk.score }}%;" aria-valuenow="{{ risk.score }}" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2 text-muted" style="font-size: 0.7rem;">
+                        <span>0 (Safe)</span>
+                        <span>100 (Critical)</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-muted py-4">Risk telemetry unavailable.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommended Actions -->
+    <div class="col-xl-4 col-md-12">
+        <div class="card h-100 border border-secondary shadow-lg" style="background: rgba(13, 22, 38, 0.5) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-clipboard-check text-success me-2"></i> Automated Recommendations
+            </div>
+            <div class="card-body">
+                <div class="alert bg-dark border border-secondary text-light small mb-3">
+                    <i class="fa-solid fa-robot text-purple-glow me-2"></i> AI Analysis suggests the following mitigation strategies based on the threat vector:
+                </div>
+                <div class="list-group list-group-flush bg-transparent">
+                    {% if alert.severity in ['Critical', 'High'] %}
+                        <label class="list-group-item bg-transparent border-secondary px-0 text-light d-flex gap-3">
+                            <input class="form-check-input flex-shrink-0" type="checkbox" value="">
+                            <span class="small">Immediate Network Isolation of Endpoint <strong class="text-danger">WS-{{ user.username|upper if user else 'UNKNOWN' }}</strong></span>
+                        </label>
+                        <label class="list-group-item bg-transparent border-secondary px-0 text-light d-flex gap-3">
+                            <input class="form-check-input flex-shrink-0" type="checkbox" value="">
+                            <span class="small">Force remote credential reset and terminate active AD sessions.</span>
+                        </label>
+                    {% elif alert.severity == 'Medium' %}
+                        <label class="list-group-item bg-transparent border-secondary px-0 text-light d-flex gap-3">
+                            <input class="form-check-input flex-shrink-0" type="checkbox" value="">
+                            <span class="small">Escalate monitoring strictness for user to Level 2.</span>
+                        </label>
+                        <label class="list-group-item bg-transparent border-secondary px-0 text-light d-flex gap-3">
+                            <input class="form-check-input flex-shrink-0" type="checkbox" value="">
+                            <span class="small">Review files accessed in the last 4 hours for sensitivity.</span>
+                        </label>
+                    {% else %}
+                        <label class="list-group-item bg-transparent border-secondary px-0 text-light d-flex gap-3">
+                            <input class="form-check-input flex-shrink-0" type="checkbox" value="">
+                            <span class="small">Acknowledge alert and log as false positive / benign behavior.</span>
+                        </label>
+                    {% endif %}
+                    <label class="list-group-item bg-transparent border-0 px-0 text-light d-flex gap-3">
+                        <input class="form-check-input flex-shrink-0" type="checkbox" value="">
+                        <span class="small">Require manager authorization for next login.</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Activity Timeline -->
+    <div class="col-xl-6">
+        <div class="card h-100 border border-secondary shadow-lg" style="background: rgba(13, 22, 38, 0.5) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-timeline text-primary me-2"></i> Contextual Activity Timeline
+            </div>
+            <div class="card-body p-4" style="max-height: 500px; overflow-y: auto;">
+                <ul class="timeline">
+                    {% for activity in recent_activities %}
+                    <li class="timeline-item">
+                        <div class="timeline-icon d-flex align-items-center justify-content-center" 
+                             style="border-color: {% if activity.files_accessed > 50 or activity.usb_used > 2 or activity.failed_logins > 2 %}var(--danger){% else %}var(--info){% endif %};">
+                        </div>
+                        <div class="text-light fw-medium mb-1" style="font-size: 0.9rem;">
+                            Accessed {{ activity.files_accessed }} files, {{ activity.usb_used }} USB, {{ activity.failed_logins }} Failed Logins
+                        </div>
+                        <div class="text-muted small font-monospace">
+                            {{ activity.timestamp.strftime('%H:%M:%S UTC') }}
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="timeline-item text-muted py-4">No recent activity telemetry available for context.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investigation Workflow & Analyst Notes -->
+    <div class="col-xl-6">
+        <!-- Workflow -->
+        <div class="card border border-secondary shadow-lg mb-4" style="background: rgba(13, 22, 38, 0.5) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-bars-progress text-warning me-2"></i> Investigation Workflow
+            </div>
+            <div class="card-body py-4">
+                <div class="position-relative m-4">
+                    <div class="progress bg-dark" style="height: 4px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <button type="button" class="position-absolute top-0 start-0 translate-middle btn btn-sm btn-warning rounded-pill" style="width: 2rem; height:2rem;">1</button>
+                    <button type="button" class="position-absolute top-0 start-50 translate-middle btn btn-sm btn-warning rounded-pill" style="width: 2rem; height:2rem;">2</button>
+                    <button type="button" class="position-absolute top-0 start-100 translate-middle btn btn-sm btn-dark border border-secondary text-muted rounded-pill" style="width: 2rem; height:2rem;">3</button>
+                </div>
+                <div class="d-flex justify-content-between text-muted small mt-2 fw-medium">
+                    <span class="text-warning">Detected</span>
+                    <span class="text-warning">Under Analysis</span>
+                    <span>Contained / Resolved</span>
+                </div>
+                <div class="d-flex justify-content-between mt-4">
+                    <button class="btn btn-sm btn-outline-secondary">Mark Resolved</button>
+                    <button class="btn btn-sm btn-outline-warning border-warning text-warning hover-glow">Advance Phase</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analyst Notes -->
+        <div class="card border border-secondary shadow-lg" style="background: rgba(13, 22, 38, 0.5) !important;">
+            <div class="card-header border-bottom border-secondary text-light fw-bold py-3">
+                <i class="fa-solid fa-pen-to-square text-purple-glow me-2"></i> Analyst Case Notes
+            </div>
+            <div class="card-body p-0">
+                <textarea class="form-control bg-transparent border-0 text-light p-3" rows="5" placeholder="Document findings, IOCs, or correlation notes here... Case auto-saves."></textarea>
+            </div>
+            <div class="card-footer border-top border-secondary bg-dark bg-opacity-25 d-flex justify-content-between align-items-center">
+                <span class="text-muted small"><i class="fa-solid fa-cloud-arrow-up me-1"></i> Draft saved 2 mins ago</span>
+                <button class="btn btn-sm btn-primary bg-purple-btn border-0 px-3 rounded-pill">Save Notes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

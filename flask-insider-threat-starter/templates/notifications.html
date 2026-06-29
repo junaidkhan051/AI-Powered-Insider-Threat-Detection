@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+/* Notification Timeline Styles */
+.timeline {
+    position: relative;
+    padding-left: 3rem;
+    margin-top: 1rem;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 1.5rem;
+    height: 100%;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.1);
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+.timeline-icon {
+    position: absolute;
+    left: -3rem;
+    top: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(13, 22, 38, 1);
+    background: var(--dark);
+    z-index: 1;
+}
+.timeline-card {
+    background: rgba(13, 22, 38, 0.6) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.timeline-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+}
+.timeline-card.unread {
+    border-left: 4px solid var(--info);
+    background: rgba(13, 202, 240, 0.05) !important;
+}
+.timeline-card.unread.priority-critical {
+    border-left-color: var(--danger);
+    background: rgba(220, 53, 69, 0.05) !important;
+}
+.timeline-card.unread.priority-high {
+    border-left-color: var(--warning);
+}
+.timeline-card.unread.priority-ai {
+    border-left-color: var(--purple);
+}
+</style>
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <h2 class="text-light fw-bold mb-1"><i class="fa-solid fa-bell text-info me-2 animate-pulse"></i> Notification Center</h2>
+        <p class="text-muted small">Global stream of system events, security triggers, and AI evaluations.</p>
+    </div>
+    <div class="col-md-6 d-flex justify-content-md-end mt-3 mt-md-0 gap-2">
+        <div class="input-group w-auto">
+            <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input type="text" class="form-control bg-dark border-secondary text-light" placeholder="Search notifications...">
+        </div>
+        <button class="btn btn-outline-secondary rounded hover-glow" title="Mark all as read">
+            <i class="fa-solid fa-check-double me-2"></i> Mark All Read
+        </button>
+    </div>
+</div>
+
+<div class="card bg-transparent border-0 mb-4">
+    <div class="card-header bg-transparent border-bottom border-secondary px-0">
+        <ul class="nav nav-tabs border-0" id="notificationTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active bg-transparent border-0 text-light fw-bold px-4 py-3 border-bottom border-info border-3" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="true">
+                    All
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link bg-transparent border-0 text-muted fw-bold px-4 py-3" id="threat-tab" data-bs-toggle="tab" data-bs-target="#threat" type="button" role="tab" aria-controls="threat" aria-selected="false">
+                    Threat Alerts <span class="badge bg-danger ms-2">2</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link bg-transparent border-0 text-muted fw-bold px-4 py-3" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai" type="button" role="tab" aria-controls="ai" aria-selected="false">
+                    AI Alerts
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link bg-transparent border-0 text-muted fw-bold px-4 py-3" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button" role="tab" aria-controls="system" aria-selected="false">
+                    System Alerts
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link bg-transparent border-0 text-muted fw-bold px-4 py-3" id="user-tab" data-bs-toggle="tab" data-bs-target="#user" type="button" role="tab" aria-controls="user" aria-selected="false">
+                    User Alerts
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body px-0 pt-4">
+        <div class="tab-content" id="notificationTabContent">
+            <!-- All Tab -->
+            <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+                
+                <div class="text-muted small fw-bold mb-3 ms-2">TODAY</div>
+                <div class="timeline">
+                    <!-- Threat Alert (Critical) -->
+                    <div class="timeline-item">
+                        <div class="timeline-icon text-danger shadow border-danger bg-dark">
+                            <i class="fa-solid fa-radiation animate-pulse"></i>
+                        </div>
+                        <div class="card timeline-card unread priority-critical p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-danger me-2">CRITICAL THREAT</span>
+                                    <span class="text-muted small" style="font-family: monospace;">10:42 AM</span>
+                                </div>
+                                <button class="btn btn-sm btn-link text-muted p-0" title="Mark as read"><i class="fa-solid fa-circle-check"></i></button>
+                            </div>
+                            <h6 class="text-light fw-bold mb-1">Mass File Exfiltration Detected</h6>
+                            <p class="text-muted small mb-0">Entity <a href="#" class="text-primary text-decoration-none">jdoe_admin</a> has accessed 1,204 files in the last 60 seconds. Auto-isolation protocol initiated.</p>
+                        </div>
+                    </div>
+
+                    <!-- AI Alert -->
+                    <div class="timeline-item">
+                        <div class="timeline-icon text-purple shadow border-purple bg-dark" style="border-color: var(--purple);">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <div class="card timeline-card unread priority-ai p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-purple-btn me-2">AI HEURISTICS</span>
+                                    <span class="text-muted small" style="font-family: monospace;">08:15 AM</span>
+                                </div>
+                                <button class="btn btn-sm btn-link text-muted p-0" title="Mark as read"><i class="fa-solid fa-circle-check"></i></button>
+                            </div>
+                            <h6 class="text-light fw-bold mb-1">Behavioral Baseline Shift</h6>
+                            <p class="text-muted small mb-0">Isolation Forest model detected an anomaly score of 0.92 for the engineering department's VPN access patterns.</p>
+                        </div>
+                    </div>
+
+                    <!-- User Alert -->
+                    <div class="timeline-item">
+                        <div class="timeline-icon text-warning shadow border-warning bg-dark">
+                            <i class="fa-solid fa-user-lock"></i>
+                        </div>
+                        <div class="card timeline-card unread priority-high p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-warning text-dark me-2">HIGH RISK USER</span>
+                                    <span class="text-muted small" style="font-family: monospace;">06:30 AM</span>
+                                </div>
+                                <button class="btn btn-sm btn-link text-muted p-0" title="Mark as read"><i class="fa-solid fa-circle-check"></i></button>
+                            </div>
+                            <h6 class="text-light fw-bold mb-1">Multiple Failed Authentications</h6>
+                            <p class="text-muted small mb-0">User <a href="#" class="text-primary text-decoration-none">asmith_fin</a> generated 5 consecutive failed MFA prompts.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-muted small fw-bold mb-3 ms-2 mt-5">YESTERDAY</div>
+                <div class="timeline">
+                    <!-- System Alert (Read) -->
+                    <div class="timeline-item">
+                        <div class="timeline-icon text-info shadow border-secondary bg-dark">
+                            <i class="fa-solid fa-server"></i>
+                        </div>
+                        <div class="card timeline-card p-3 opacity-75">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge border border-info text-info bg-transparent me-2">SYSTEM</span>
+                                    <span class="text-muted small" style="font-family: monospace;">11:45 PM</span>
+                                </div>
+                            </div>
+                            <h6 class="text-light fw-bold mb-1">Threat Definitions Updated</h6>
+                            <p class="text-muted small mb-0">Global threat intelligence signatures were successfully synchronized with the central database.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-secondary rounded-pill px-4">Load Older Notifications</button>
+                </div>
+            </div>
+            
+            <!-- Other tabs just placeholders for design -->
+            <div class="tab-pane fade" id="threat" role="tabpanel" aria-labelledby="threat-tab">
+                <div class="text-center text-muted py-5">
+                    <i class="fa-solid fa-shield-virus fa-3x mb-3 opacity-50 text-danger"></i>
+                    <h5>Threat Alerts Filter</h5>
+                    <p>Only Critical and High severity threat events will appear here.</p>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="ai" role="tabpanel" aria-labelledby="ai-tab">
+                <div class="text-center text-muted py-5">
+                    <i class="fa-solid fa-brain fa-3x mb-3 opacity-50 text-purple-glow"></i>
+                    <h5>AI Insights Filter</h5>
+                    <p>Machine learning heuristics and predictive alerts.</p>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="system" role="tabpanel" aria-labelledby="system-tab">
+                <div class="text-center text-muted py-5">
+                    <i class="fa-solid fa-server fa-3x mb-3 opacity-50 text-info"></i>
+                    <h5>System Alerts Filter</h5>
+                    <p>Platform updates, sync events, and health checks.</p>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="user" role="tabpanel" aria-labelledby="user-tab">
+                <div class="text-center text-muted py-5">
+                    <i class="fa-solid fa-users-viewfinder fa-3x mb-3 opacity-50 text-warning"></i>
+                    <h5>User Behavior Filter</h5>
+                    <p>Specific user monitoring events and clearance changes.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab styling logic
+        const tabs = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function (event) {
+                tabs.forEach(t => {
+                    t.classList.remove('text-light', 'border-bottom', 'border-info', 'border-3');
+                    t.classList.add('text-muted');
+                });
+                event.target.classList.remove('text-muted');
+                event.target.classList.add('text-light', 'border-bottom', 'border-info', 'border-3');
+            });
+        });
+
+        // Mark as read logic
+        const readBtns = document.querySelectorAll('.timeline-card .btn-link');
+        readBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const card = this.closest('.timeline-card');
+                card.classList.remove('unread', 'priority-critical', 'priority-high', 'priority-ai');
+                card.classList.add('opacity-75');
+                this.remove();
+            });
+        });
+    });
+</script>
+{% endblock %}
